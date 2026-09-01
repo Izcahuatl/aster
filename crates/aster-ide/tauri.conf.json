@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Aster",
+  "version": "1.0.0",
+  "identifier": "dev.aster.ide",
+  "build": { "frontendDist": "ui" },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [{ "title": "Aster", "width": 1500, "height": 980, "minWidth": 1060, "minHeight": 680, "resizable": true, "decorations": false, "transparent": true, "shadow": true }],
+    "security": { "csp": "default-src 'self'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" }
+  },
+  "bundle": { "active": true, "targets": ["nsis"], "icon": ["icons/icon.ico"] }
+}

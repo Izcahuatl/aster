@@ -1,0 +1,14 @@
+[package]
+name = "aster-analysis"
+version = "1.0.0"
+edition = "2024"
+description = "Static analysis engine for Aster's Lua tooling"
+
+[dependencies]
+full_moon = { version = "2.2.0", features = ["lua54"] }
+ignore = "0.4.33"
+petgraph = "0.8.3"
+serde = { version = "1.0.229", features = ["derive"] }
+
+[dev-dependencies]
+tempfile = "3.27.0"

@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aster — Lua IDE</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="app" class="state-home">
+      <!-- Top Titlebar / Command Area -->
+      <header class="titlebar" id="titlebar">
+        <div class="titlebar-left">
+          <button class="wordmark" id="titlebar-home-btn" title="Close Workspace and Return Home" aria-label="Close workspace and return home">
+            <img class="mark-svg" src="./assets/aster-logo.svg" alt="" />
+            <span class="wordmark-text">Aster</span>
+          </button>
+
+          <div class="workspace-pill workspace-only" id="top-workspace-pill" title="Current Workspace">
+            <svg class="pill-icon" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+              <path d="M1.75 2.5A1.75 1.75 0 0 0 0 4.25v7.5C0 12.716.784 13.5 1.75 13.5h12.5A1.75 1.75 0 0 0 16 11.75v-6A1.75 1.75 0 0 0 14.25 4.25H7.707l-1.353-1.354A1.75 1.75 0 0 0 5.116 2.5H1.75z"/>
+            </svg>
+            <span class="pill-name" id="top-workspace-name">workspace</span>
+            <span class="pill-divider">/</span>
+            <span class="pill-branch" id="top-git-branch">main</span>
+          </div>
+        </div>
+
+        <div class="titlebar-center">
+          <button class="command-center-btn" id="command-center-btn" title="Quick Open & Commands (Ctrl+P / ⌘P)">
+            <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+            <span class="command-placeholder">Search files, symbols, commands...</span>
+            <kbd class="shortcut-badge">Ctrl+P</kbd>
+          </button>
+        </div>
+
+        <div class="titlebar-right">
+          <button class="run-btn workspace-only" id="top-run-btn" title="Run current Lua file (F5)">
+            <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor"><path d="M4 2.8v10.4a.8.8 0 0 0 1.22.68l7.55-5.2a.82.82 0 0 0 0-1.36L5.22 2.12A.8.8 0 0 0 4 2.8z"/></svg>
+            <span class="btn-text">Run</span>
+          </button>
+          <button class="icon-btn workspace-only secondary-tool-btn" id="top-analyze-btn" title="Check workspace code (Ctrl+R)">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
+              <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+              <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 4.9 4c1.552 0 2.94-.707 3.857-1.818a.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+            </svg>
+            <span class="btn-text">Check</span>
+          </button>
+
+          <button class="icon-btn workspace-only secondary-tool-btn" id="top-inspector-toggle" title="Inspect member resolution (Ctrl+M)">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
+              <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm10 1v10h4a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1h-4z"/>
+            </svg>
+            <span class="btn-text">Members</span>
+          </button>
+
+          <div class="window-controls" aria-label="Window controls">
+            <button class="window-control" id="window-minimize" title="Minimize" aria-label="Minimize window">
+              <svg viewBox="0 0 12 12" width="11" height="11"><path d="M2 6.5h8" /></svg>
+            </button>
+            <button class="window-control" id="window-maximize" title="Maximize or restore" aria-label="Maximize or restore window">
+              <svg viewBox="0 0 12 12" width="10" height="10"><rect x="2" y="2" width="8" height="8" /></svg>
+            </button>
+            <button class="window-control close" id="window-close" title="Close" aria-label="Close window">
+              <svg viewBox="0 0 12 12" width="11" height="11"><path d="M2 2l8 8M10 2l-8 8" /></svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- View 1: Home / Welcome Screen -->
+      <section class="home-screen" id="home-screen">
+        <div class="home-container">
+          <div class="home-actions" aria-label="Workspace actions">
+            <button class="home-action-btn" id="home-open-folder-btn">
+              <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
+                <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z"/>
+              </svg>
+              <span>Open Folder</span>
+            </button>
+            <button class="home-action-btn" id="home-new-workspace-btn">
+              <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
+                <path d="M8 2.5a.5.5 0 0 1 .5.5v4.5H13a.5.5 0 0 1 0 1H8.5V13a.5.5 0 0 1-1 0V8.5H3a.5.5 0 0 1 0-1h4.5V3a.5.5 0 0 1 .5-.5z"/>
+              </svg>
+              <span>New Lua Project</span>
+            </button>
+          </div>
+
+          <div class="home-environment">
+            <span class="environment-label">Runtime</span>
+            <select id="home-runtime-select" aria-label="Default Lua runtime">
+              <option value="lua54">Lua 5.4</option>
+              <option value="luajit21">LuaJIT 2.1</option>
+              <option value="lua53">Lua 5.3</option>
+              <option value="lua51">Lua 5.1</option>
+            </select>
+            <span class="environment-note" id="home-runtime-note">Checking installation...</span>
+          </div>
+
+          <div class="home-recents-section">
+            <div class="recents-bar">
+              <h2 class="section-title">Recent</h2>
+              <div class="recents-filter-wrap">
+                <input type="text" id="recents-filter-input" placeholder="Filter recent projects..." />
+              </div>
+            </div>
+
+            <div class="recents-list" id="recents-list">
+              <!-- Dynamically populated -->
+            </div>
+
+            <div class="recents-empty" id="recents-empty" hidden>
+              <p>No recent projects found. Open a folder to begin working in Aster.</p>
+            </div>
+          </div>
+
+          <div class="home-lower-grid">
+            <div class="home-start-section">
+              <h2 class="section-title">Start</h2>
+              <div class="start-actions">
+                <button class="start-action" id="start-create-project">New Lua Project</button>
+                <button class="start-action" id="start-configure-runtime">Configure Lua Runtimes</button>
+              </div>
+            </div>
+            <div class="home-learn-section">
+              <h2 class="section-title">Learn</h2>
+              <div class="start-actions">
+                <button class="start-action" id="start-open-docs">Lua Documentation</button>
+                <button class="start-action" id="start-command-palette">Command Palette</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 2: Full Project Workspace -->
+      <main class="workbench" id="workbench">
+        <!-- Left Activity Rail -->
+        <nav class="activity-rail" aria-label="Tool views">
+          <button class="rail-btn active" id="rail-explorer" title="Project Explorer (Ctrl+Shift+E)">
+            <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
+              <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184l.797.901c.21.238.455.415.728.415H13.5A1.5 1.5 0 0 1 15 6v6.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9zM2.5 3a.5.5 0 0 0-.5.5V5h12V4.5a.5.5 0 0 0-.5-.5H8.6c-.63 0-1.196-.4-1.636-.898l-.797-.902A1.44 1.44 0 0 0 5.264 2H2.5z"/>
+            </svg>
+          </button>
+
+          <button class="rail-btn" id="rail-search" title="Search in Workspace (Ctrl+Shift+F)">
+            <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+          </button>
+
+          <button class="rail-btn" id="rail-git" title="Source Control (Ctrl+Shift+G)">
+            <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
+              <path d="M11.5 3a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 1a2.5 2.5 0 0 0-.5 4.95V9.05a2.5 2.5 0 1 0 1 0V6a2.5 2.5 0 0 0 2-2.45A2.5 2.5 0 0 0 4.5 1z"/>
+            </svg>
+          </button>
+
+          <button class="rail-btn" id="rail-graph" title="Module Require Graph (Ctrl+Shift+D)">
+            <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
+              <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h3A1.5 1.5 0 0 1 6 1.5v3A1.5 1.5 0 0 1 4.5 6h-3A1.5 1.5 0 0 1 0 4.5v-3zM10 1.5A1.5 1.5 0 0 1 11.5 0h3A1.5 1.5 0 0 1 16 1.5v3A1.5 1.5 0 0 1 14.5 6h-3A1.5 1.5 0 0 1 10 4.5v-3zM5 11.5A1.5 1.5 0 0 1 6.5 10h3A1.5 1.5 0 0 1 11 11.5v3A1.5 1.5 0 0 1 9.5 16h-3A1.5 1.5 0 0 1 5 14.5v-3z"/>
+            </svg>
+          </button>
+
+          <div class="rail-spacer"></div>
+
+          <button class="rail-btn" id="rail-settings" title="Settings">
+            <svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="8" r="2.25" />
+              <path d="M6.9 1.7h2.2l.45 1.55c.35.13.68.32.98.56l1.57-.39 1.1 1.9-1.12 1.17c.03.17.04.34.04.51s-.01.34-.04.51l1.12 1.17-1.1 1.9-1.57-.39c-.3.24-.63.43-.98.56L9.1 14.3H6.9l-.45-1.55a4.8 4.8 0 0 1-.98-.56l-1.57.39-1.1-1.9 1.12-1.17A3.1 3.1 0 0 1 3.88 7c0-.17.01-.34.04-.51L2.8 5.32l1.1-1.9 1.57.39c.3-.24.63-.43.98-.56L6.9 1.7Z" />
+            </svg>
+          </button>
+        </nav>
+
+        <!-- Left Sidebar: Explorer / Search / Git / Graph -->
+        <aside class="sidebar" id="sidebar">
+          <!-- Explorer View -->
+          <div class="sidebar-view" id="view-explorer">
+            <div class="sidebar-header">
+              <span class="sidebar-title">Explorer</span>
+              <div class="sidebar-actions">
+                <button class="icon-action-btn" id="explorer-new-file" title="New Lua File">
+                  <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                  </svg>
+                </button>
+                <button class="icon-action-btn" id="explorer-new-folder" title="New Folder">
+                  <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
+                    <path d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184l.797.901c.21.238.455.415.728.415H13.5A1.5 1.5 0 0 1 15 6v6.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9z"/>
+                  </svg>
+                </button>
+                <button class="icon-action-btn" id="explorer-refresh" title="Refresh Explorer">
+                  <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                  </svg>
+                </button>
+                <button class="icon-action-btn" id="explorer-collapse-all" title="Collapse All Folders">
+                  <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
+                    <path d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="tree-container" id="tree-container">
+              <div class="tree-root-header" id="tree-root-header">
+                <span class="chevron down">›</span>
+                <span class="tree-root-name" id="tree-root-name">Loading...</span>
+              </div>
+              <div class="file-tree" id="file-tree" role="tree"></div>
+            </div>
+          </div>
+
+          <!-- Search View -->
+          <div class="sidebar-view" id="view-search" hidden>
+            <div class="sidebar-header">
+              <span class="sidebar-title">Search in Workspace</span>
+            </div>
+            <div class="sidebar-search-box">
+              <input type="text" id="global-search-input" placeholder="Search Lua patterns..." />
+              <div class="search-options">
+                <label><input type="checkbox" id="search-match-case" /> Match Case</label>
+                <label><input type="checkbox" id="search-whole-word" /> Word</label>
+              </div>
+              <div class="search-results-list" id="search-results-list"></div>
+            </div>
+          </div>
+
+          <!-- Git / Source Control View -->
+          <div class="sidebar-view" id="view-git" hidden>
+            <div class="sidebar-header">
+              <span class="sidebar-title">Source Control</span>
+            </div>
+            <div class="git-view-content">
+              <div class="git-status-summary">
+                <span class="git-badge-branch" id="git-branch-badge">branch: main</span>
+              </div>
+              <div class="git-files-list" id="git-files-list">
+                <div class="tree-item-file">
+                  <img class="lua-file-icon" src="./assets/lua-logo.svg" alt="" />
+                  <span class="file-name">All files committed</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Module Graph View -->
+          <div class="sidebar-view" id="view-graph" hidden>
+            <div class="sidebar-header">
+              <span class="sidebar-title">Module Graph</span>
+            </div>
+            <div class="graph-tree-container" id="graph-tree-container">
+              <div class="graph-summary" id="graph-summary">Loading require graph...</div>
+              <div class="graph-nodes-list" id="graph-nodes-list"></div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Code Editor Surface (Visually Dominates) -->
+        <section class="editor-pane" id="editor-pane">
+          <!-- Editor Tabs -->
+          <div class="editor-tabbar" role="tablist">
+            <div class="tabs-container" id="tabs"></div>
+          </div>
+
+          <!-- Breadcrumbs Bar -->
+          <nav class="breadcrumb-bar" aria-label="Breadcrumb">
+            <span class="bc-item bc-root" id="bc-root">workspace</span>
+            <span class="bc-sep">›</span>
+            <span class="bc-item bc-file" id="bc-file">no file selected</span>
+            <span class="bc-sep" id="bc-symbol-sep" hidden>›</span>
+            <span class="bc-item bc-symbol" id="bc-symbol" hidden></span>
+          </nav>
+
+          <div class="editor-find" id="editor-find" hidden>
+            <input id="editor-find-input" type="text" placeholder="Find" autocomplete="off" aria-label="Find in file" />
+            <span class="editor-find-count" id="editor-find-count">0 results</span>
+            <button class="icon-action-btn text-icon" id="editor-find-prev" title="Previous match" aria-label="Previous match"><span class="css-icon arrow-up"></span></button>
+            <button class="icon-action-btn text-icon" id="editor-find-next" title="Next match" aria-label="Next match"><span class="css-icon arrow-down"></span></button>
+            <button class="icon-action-btn editor-find-replace-toggle" id="editor-find-toggle-replace" title="Show replace">Replace</button>
+            <button class="icon-action-btn text-icon" id="editor-find-close" title="Close find" aria-label="Close find"><span class="css-icon close-icon"></span></button>
+            <div class="editor-replace-row" id="editor-replace-row" hidden>
+              <input id="editor-replace-input" type="text" placeholder="Replace with" autocomplete="off" aria-label="Replace with" />
+              <button class="secondary-btn" id="editor-replace-one">Replace</button>
+              <button class="secondary-btn" id="editor-replace-all">Replace All</button>
+            </div>
+          </div>
+
+          <!-- Core Code Editor -->
+          <div class="editor-viewport" id="editor-viewport">
+            <div class="gutter" id="gutter" aria-hidden="true">
+              <div class="line-numbers" id="line-numbers"></div>
+              <div class="gutter-markers" id="gutter-markers"></div>
+            </div>
+            <div class="code-area">
+              <div class="syntax-highlight-layer" id="syntax-layer" aria-hidden="true"></div>
+              <textarea id="editor" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off" aria-label="Lua Editor"></textarea>
+            </div>
+          </div>
+
+          <!-- Editor Empty State -->
+          <div class="editor-empty-state" id="editor-empty-state" hidden>
+            <p>Select a Lua file from the Explorer to begin editing.</p>
+            <kbd>Ctrl+P</kbd>
+          </div>
+        </section>
+
+        <!-- Right Sidebar: Lua Metatable Inspector (Signature Feature!) -->
+        <aside class="inspector-sidebar" id="inspector-sidebar">
+          <div class="inspector-resizer" id="inspector-resizer" title="Drag to resize Inspector"></div>
+          <div class="inspector-header">
+            <div class="inspector-header-left">
+              <span class="inspector-title">Member Lookup</span>
+            </div>
+            <button class="icon-action-btn" id="inspector-close-btn" title="Hide Inspector (Ctrl+M)">
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Clean empty state when no member is selected -->
+          <div class="inspector-empty-state" id="inspector-empty-state">
+            <div class="empty-state-title">Select a member access</div>
+          </div>
+
+          <!-- Populated state when member is active -->
+          <div class="inspector-populated-content" id="inspector-populated-content" hidden>
+            <!-- 1. Resolution Chain Summary -->
+            <div class="inspector-chain-banner" id="inspector-chain-banner">
+              <div class="chain-flow" id="chain-flow"></div>
+              <span class="chain-status" id="chain-status"></span>
+            </div>
+
+            <!-- 2. Step-by-step resolution walk -->
+            <section class="inspector-section">
+              <div class="section-hdr">
+                <span class="section-lbl">Resolution Trace</span>
+                <span class="section-loc" id="trace-line-tag"></span>
+              </div>
+              <div class="trace-steps-list" id="trace-steps-list"></div>
+            </section>
+
+            <!-- 3. Class / Table Model Structure -->
+            <section class="inspector-section">
+              <div class="section-hdr">
+                <span class="section-lbl">Class Hierarchy</span>
+                <span class="section-badge" id="classes-count-badge"></span>
+              </div>
+              <div class="class-hierarchy-tree" id="class-hierarchy-tree"></div>
+            </section>
+
+            <!-- 4. Member Details -->
+            <section class="inspector-section" id="inspector-details-section">
+              <div class="section-hdr">
+                <span class="section-lbl">Member Details</span>
+              </div>
+              <div class="member-details-table" id="member-details-table">
+                <div class="detail-row">
+                  <span class="detail-key">Member</span>
+                  <span class="detail-val mono" id="detail-name">-</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-key">Kind</span>
+                  <span class="detail-val mono" id="detail-kind">-</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-key">Owner</span>
+                  <span class="detail-val mono" id="detail-owner">-</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-key">Definition</span>
+                  <a class="detail-val jump-link" id="detail-location" href="#">-</a>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-key">Resolution</span>
+                  <span class="detail-val mono" id="detail-inheritance">-</span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </aside>
+      </main>
+
+      <!-- Bottom Drawer: Problems / Diagnostics Log / Lua syntax check (Collapsed by default) -->
+      <section class="bottom-drawer collapsed" id="bottom-drawer">
+        <div class="drawer-resizer" id="drawer-resizer" title="Drag to resize panel"></div>
+        <div class="drawer-header">
+          <div class="drawer-tabs">
+            <button class="drawer-tab" id="drawer-tab-problems">
+              <span>Problems</span>
+              <span class="tab-count" id="drawer-problem-count">0</span>
+            </button>
+            <button class="drawer-tab" id="drawer-tab-suggestions">
+              <span>Suggestions</span>
+              <span class="tab-count" id="drawer-suggestion-count">0</span>
+            </button>
+            <button class="drawer-tab" id="drawer-tab-output">
+              <span>Output</span>
+            </button>
+            <button class="drawer-tab" id="drawer-tab-repl">
+              <span>Syntax Check</span>
+            </button>
+          </div>
+
+          <div class="drawer-actions">
+            <button class="icon-action-btn" id="drawer-toggle-size" title="Expand/Collapse Drawer (Ctrl+J)">
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <path d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="drawer-body">
+          <!-- Drawer Tab 1: Problems List -->
+          <div class="drawer-panel" id="panel-problems">
+            <div class="problems-table" id="problems-table">
+              <div class="problem-list-rows" id="problem-list-rows">
+                <div class="problems-empty">No problems detected across workspace.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Drawer Tab 2: Performance Suggestions -->
+          <div class="drawer-panel" id="panel-suggestions" hidden>
+            <div class="problems-table">
+              <div class="problem-list-rows" id="suggestion-list-rows">
+                <div class="problems-empty">No performance suggestions.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Drawer Tab 3: Output Log -->
+          <div class="drawer-panel" id="panel-output" hidden>
+            <div class="output-log" id="output-log">
+              <div class="log-line info">Run a Lua file to see its output here.</div>
+            </div>
+          </div>
+
+          <!-- Drawer Tab 4: Lua syntax validation -->
+          <div class="drawer-panel" id="panel-repl" hidden>
+            <div class="repl-container">
+              <div class="repl-output" id="repl-output">
+                <div class="repl-line system">Parse a Lua snippet without executing it.</div>
+              </div>
+              <div class="repl-input-bar">
+                <textarea id="repl-input" placeholder="e.g. local t = setmetatable({}, { __index = { name = 'Aster' } }); return t.name"></textarea>
+                <button class="primary-btn run-repl-btn" id="repl-run-btn">Validate</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Thin Information-Dense Status Bar (22px) -->
+      <footer class="statusbar" id="statusbar">
+        <div class="status-left">
+          <span class="status-item runtime-item" title="Lua Language Target">
+            <span class="status-dot green"></span>
+            <span id="status-runtime-label">Lua 5.4</span>
+          </span>
+          <span class="status-item sync-item" id="status-analysis-sync" hidden>
+            <svg viewBox="0 0 16 16" width="11" height="11" fill="currentColor">
+              <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+            </svg>
+            <span id="status-sync-text">Analyzed</span>
+          </span>
+          <button class="status-item status-btn" id="status-problems-btn" title="Toggle Problems">
+            <span class="diag-icon error css-icon close-icon" aria-hidden="true"></span>
+            <span id="status-error-count">0</span>
+            <span class="diag-icon warn css-icon warning-icon" aria-hidden="true"></span>
+            <span id="status-warn-count">0</span>
+          </button>
+        </div>
+
+        <div class="status-right">
+          <span class="status-item" id="status-selection-info" hidden>0 selected</span>
+          <span class="status-item" id="status-cursor">Ln 1, Col 1</span>
+          <span class="status-item">Spaces: 4</span>
+          <span class="status-item">UTF-8</span>
+          <span class="status-item git-item">
+            <svg viewBox="0 0 16 16" width="11" height="11" fill="currentColor">
+              <path d="M11.5 3a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 1a2.5 2.5 0 0 0-.5 4.95V9.05a2.5 2.5 0 1 0 1 0V6a2.5 2.5 0 0 0 2-2.45A2.5 2.5 0 0 0 4.5 1z"/>
+            </svg>
+            <span id="status-git-branch">main</span>
+          </span>
+        </div>
+      </footer>
+
+      <!-- Quick Open / Command Palette Modal -->
+      <div class="modal-overlay" id="command-modal-overlay" hidden>
+        <div class="command-palette-modal">
+          <div class="modal-search-row">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+            <input type="text" id="palette-input" placeholder="Type a command or file name..." autocomplete="off" />
+            <kbd class="modal-kbd">ESC</kbd>
+          </div>
+          <div class="palette-results" id="palette-results"></div>
+        </div>
+      </div>
+
+      <!-- Generic Prompt / Confirm Modal -->
+      <div class="modal-overlay" id="prompt-modal-overlay" hidden>
+        <div class="prompt-modal">
+          <h3 class="prompt-title" id="prompt-title">Prompt</h3>
+          <input type="text" class="prompt-input" id="prompt-input" />
+          <div class="prompt-actions">
+            <button class="secondary-btn" id="prompt-cancel-btn">Cancel</button>
+            <button class="primary-btn" id="prompt-ok-btn">Confirm</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Application Settings -->
+      <div class="modal-overlay" id="settings-modal-overlay" hidden>
+        <section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+          <header class="settings-modal-header">
+            <h2 id="settings-title">Settings</h2>
+            <button class="icon-action-btn text-icon" id="settings-close-btn" title="Close Settings" aria-label="Close Settings"><span class="css-icon close-icon"></span></button>
+          </header>
+          <div class="settings-section">
+            <div class="settings-field-copy">
+              <label for="settings-runtime-select">Default Lua runtime</label>
+              <span id="settings-runtime-note">Used to run Lua files in this project.</span>
+            </div>
+            <select id="settings-runtime-select">
+              <option value="lua54">Lua 5.4</option>
+              <option value="luajit21">LuaJIT 2.1</option>
+              <option value="lua53">Lua 5.3</option>
+              <option value="lua51">Lua 5.1</option>
+            </select>
+          </div>
+        </section>
+      </div>
+
+      <!-- File Context Menu -->
+      <div class="context-menu" id="context-menu" hidden>
+        <button class="ctx-item" id="ctx-new-file">New File</button>
+        <button class="ctx-item" id="ctx-new-folder">New Folder</button>
+        <div class="ctx-divider"></div>
+        <button class="ctx-item" id="ctx-rename">Rename</button>
+        <button class="ctx-item" id="ctx-delete">Delete</button>
+        <div class="ctx-divider"></div>
+        <button class="ctx-item" id="ctx-reveal">Reveal in File Explorer</button>
+        <button class="ctx-item" id="ctx-copy-path">Copy Path</button>
+      </div>
+      <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    </div>
+
+    <script src="./editor.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
